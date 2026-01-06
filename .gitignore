@@ -1,0 +1,18 @@
+# Dependencias
+node_modules/
+
+# Compilación
+dist/
+build/
+
+# Variables de entorno (Seguridad)
+.env
+
+# Logs y sistemas operativos
+*.log
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/backend/src",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/backend/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/backend",
+  "projects": {
+    "analytics": {
+      "type": "application",
+      "root": "apps/analytics",
+      "entryFile": "main",
+      "sourceRoot": "apps/analytics/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/analytics/tsconfig.app.json"
+      }
+    },
+    "attendance": {
+      "type": "application",
+      "root": "apps/attendance",
+      "entryFile": "main",
+      "sourceRoot": "apps/attendance/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/attendance/tsconfig.app.json"
+      }
+    },
+    "audit": {
+      "type": "application",
+      "root": "apps/audit",
+      "entryFile": "main",
+      "sourceRoot": "apps/audit/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/audit/tsconfig.app.json"
+      }
+    },
+    "backend": {
+      "type": "application",
+      "root": "apps/backend",
+      "entryFile": "main",
+      "sourceRoot": "apps/backend/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/backend/tsconfig.app.json"
+      }
+    },
+    "catalog": {
+      "type": "application",
+      "root": "apps/catalog",
+      "entryFile": "main",
+      "sourceRoot": "apps/catalog/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/catalog/tsconfig.app.json"
+      }
+    },
+    "enrollment": {
+      "type": "application",
+      "root": "apps/enrollment",
+      "entryFile": "main",
+      "sourceRoot": "apps/enrollment/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/enrollment/tsconfig.app.json"
+      }
+    },
+    "identity": {
+      "type": "application",
+      "root": "apps/identity",
+      "entryFile": "main",
+      "sourceRoot": "apps/identity/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/identity/tsconfig.app.json"
+      }
+    },
+    "profiles": {
+      "type": "application",
+      "root": "apps/profiles",
+      "entryFile": "main",
+      "sourceRoot": "apps/profiles/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/profiles/tsconfig.app.json"
+      }
+    },
+    "qr-engine": {
+      "type": "application",
+      "root": "apps/qr-engine",
+      "entryFile": "main",
+      "sourceRoot": "apps/qr-engine/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/qr-engine/tsconfig.app.json"
+      }
+    },
+    "scheduling": {
+      "type": "application",
+      "root": "apps/scheduling",
+      "entryFile": "main",
+      "sourceRoot": "apps/scheduling/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/scheduling/tsconfig.app.json"
+      }
+    },
+    "session-manager": {
+      "type": "application",
+      "root": "apps/session-manager",
+      "entryFile": "main",
+      "sourceRoot": "apps/session-manager/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/session-manager/tsconfig.app.json"
+      }
+    }
+  }
+}

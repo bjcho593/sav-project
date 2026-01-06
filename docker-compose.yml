@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: sav-postgres
+    ports:
+      - "5435:5432"  # <--- CAMBIO CLAVE: Puerto externo 5435
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: sav_db
+    volumes:
+      - ./infra/postgres:/docker-entrypoint-initdb.d
+      - postgres_data_v2:/var/lib/postgresql/data # <--- CAMBIO: _v2 para forzar limpieza
+
+  redis:
+    image: redis:alpine
+    container_name: sav-redis
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: sav-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+
+volumes:
+  postgres_data_v2: # <--- CAMBIO: Coincide con el de arriba
