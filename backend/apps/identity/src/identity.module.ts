@@ -2,20 +2,21 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
+import { ClientsModule, Transport } from '@nestjs/microservices'; // <--- IMPORTANTE
+
+// Entidades
 import { Session } from './attendance/session.entity';
-
-// Importamos los Controladores y Servicios de este módulo
-import { IdentityController } from './identity.controller';
-import { IdentityService } from './identity.service';
-
-// Importamos el Módulo Académico nuevo
-import { AcademicModule } from './academic/academic.module';
-
-// Importamos TODAS las entidades (Tablas de la base de datos)
 import { User } from './users/user.entity';
 import { AttendanceRecord } from './attendance/attendance.entity';
 import { Course } from './academic/course.entity';
 import { Schedule } from './academic/schedule.entity';
+
+// Controladores y Servicios
+import { IdentityController } from './identity.controller';
+import { IdentityService } from './identity.service';
+
+// Submódulos
+import { AcademicModule } from './academic/academic.module';
 
 @Module({
   imports: [
@@ -24,32 +25,42 @@ import { Schedule } from './academic/schedule.entity';
       envFilePath: '.env',
     }),
 
-    // CONFIGURACIÓN DE BASE DE DATOS
+    // 1. BASE DE DATOS
     TypeOrmModule.forRoot({
-      type: 'postgres', // <--- ¡ESTA ES LA LÍNEA QUE FALTABA!
+      type: 'postgres',
       host: process.env.DB_HOST || 'localhost',
       port: 5435, 
       username: process.env.DB_USER || 'admin',
       password: process.env.DB_PASSWORD || 'password123',
       database: process.env.DB_NAME || 'sav_db',
-      
-      // Aquí registramos las 4 tablas que hemos creado hasta ahora
       entities: [User, AttendanceRecord, Course, Schedule, Session],
-      
-      synchronize: false,
+      synchronize: true,
     }),
 
-    // Registramos repositorios locales de Identity
+    // 2. REPOSITORIOS
     TypeOrmModule.forFeature([User, AttendanceRecord, Session]),
 
-    // Configuración de Seguridad (JWT)
+    // 3. JWT
     JwtModule.register({
       secret: 'SECRET_KEY_TESIS_2025',
-      signOptions: { expiresIn: '10s' },
+      signOptions: { expiresIn: '60m' },
     }),
 
-    // Importamos el submódulo Académico
+    // 4. SUBMÓDULOS
     AcademicModule,
+
+    // 5. MICROSERVICIOS (Aquí estaba el problema)
+    // Esto hace que 'ANALYTICS_SERVICE' exista y se pueda inyectar
+    ClientsModule.register([
+      {
+        name: 'ANALYTICS_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: 'localhost',
+          port: 3001,
+        },
+      },
+    ]),
   ],
   controllers: [IdentityController],
   providers: [IdentityService],

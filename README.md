@@ -22,7 +22,7 @@
 ### Quick Start
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/YOUR_USERNAME/sav-project-thesis.git](https://github.com/YOUR_USERNAME/sav-project-thesis.git)
+    git clone [https://github.com/bjcho593/sav-project.git](https://github.com/bjcho593/sav-project-thesis.git)
     ```
 
 2.  **Start Database and Backend:**
@@ -57,4 +57,4 @@ We follow **Conventional Commits** and strict Branch Protection rules:
 * `main`: Production branch (Requires Pull Request approval).
 
 ---
-*Thesis Project 2026*
+*Project 2026*

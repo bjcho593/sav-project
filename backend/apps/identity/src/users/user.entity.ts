@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { AttendanceRecord } from '../attendance/attendance.entity'; // <--- Importar esto
 
-@Entity({ name: 'users', schema: 'identity' }) // <--- ¡Aquí ocurre la magia! Mapeamos esquema y tabla
+@Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -8,15 +9,16 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column({ name: 'password_hash' }) // En la DB se llama password_hash
-  passwordHash: string;              // En el código la llamamos passwordHash
+  @Column()
+  password?: string; // El signo ? es porque a veces no traemos el password por seguridad
 
   @Column({ default: 'STUDENT' })
-  role: string;
+  role: string; // 'TEACHER', 'STUDENT', 'ADMIN'
 
-  @Column({ name: 'is_active', default: true })
-  isActive: boolean;
+  @Column({ nullable: true })
+  fullName: string;
 
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  // --- ESTA ES LA PROPIEDAD QUE FALTABA ---
+  @OneToMany(() => AttendanceRecord, (record) => record.student)
+  attendanceRecords: AttendanceRecord[];
 }

@@ -1,6 +1,11 @@
+import { IsString, IsUUID, IsNotEmpty } from 'class-validator';
+
 export class ScanQrDto {
-  userId: string;       // El ID del estudiante que escanea
-  qrContent: string;    // El texto encriptado que leyó del QR
-  gpsLat: number;       // Latitud del estudiante
-  gpsLong: number;      // Longitud del estudiante
+  @IsUUID()
+  @IsNotEmpty()
+  userId: string; // El ID del estudiante que escanea
+
+  @IsString()
+  @IsNotEmpty()
+  qrContent: string; // El chorizo de letras que viene en el QR (Token JWT)
 }

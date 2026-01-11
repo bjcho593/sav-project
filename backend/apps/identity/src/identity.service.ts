@@ -1,11 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { JwtService } from '@nestjs/jwt'; 
+import { JwtService } from '@nestjs/jwt';
+import { ClientProxy } from '@nestjs/microservices';
+import * as QRCode from 'qrcode';
+
+// Entidades
 import { User } from './users/user.entity';
 import { AttendanceRecord } from './attendance/attendance.entity';
 import { Session } from './attendance/session.entity';
-import * as QRCode from 'qrcode';
 
 @Injectable()
 export class IdentityService {
@@ -21,15 +24,12 @@ export class IdentityService {
     private sessionRepository: Repository<Session>,
 
     private jwtService: JwtService,
+
+    @Inject('ANALYTICS_SERVICE') private analyticsClient: ClientProxy,
   ) {}
 
-  findAll(): Promise<User[]> { return this.usersRepository.find(); }
-
-  // --- 1. GENERAR QR MEJORADO ---
-  // Ahora devuelve un Objeto { imagen, id_sesion }
+  // --- 1. GENERAR QR ---
   async generateClassQr(scheduleId: string): Promise<{ qrImage: string, sessionId: string }> { 
-    
-    // A. Buscar o Crear Sesión (Lógica de siempre)
     let session = await this.sessionRepository.findOne({
       where: { scheduleId: scheduleId, status: 'OPEN' }
     });
@@ -44,47 +44,90 @@ export class IdentityService {
       session = await this.sessionRepository.save(newSession);
     }
 
-    // B. Generar Token
     const payload = { 
       sessionId: session.id, 
       generatedAt: Date.now() 
     };
 
     const signedToken = this.jwtService.sign(payload);
-    console.log('📋 ID TOKEN:', signedToken);
-    console.log(`🔑 QR GENERADO PARA SESIÓN: ${session.id}`);
 
-    // C. Generar Imagen QR
+    console.log('================================================');
+    console.log('🔑 TOKEN PARA COPIAR EN POSTMAN (Cópialo todo):');
+    console.log(signedToken);
+    console.log('================================================');
+
     const qrImage = await QRCode.toDataURL(signedToken);
 
-    // D. RETORNO NUEVO: Devolvemos el ID visible para el Frontend
-    return {
-      qrImage: qrImage,
-      sessionId: session.id 
-    };
+    return { qrImage: qrImage, sessionId: session.id };
   }
 
-  // --- 2. REGISTRAR ASISTENCIA (Sin cambios) ---
-  async registerAttendance(data: any): Promise<any> {
+  // --- 2. REGISTRAR ASISTENCIA ---
+  async registerAttendance(data: { userId: string, qrContent: string }): Promise<any> {
+    
+    // =========================================================================
+    // 🛠️ AUTO-GENERACIÓN DE USUARIO (CORREGIDO)
+    // =========================================================================
+    const userExists = await this.usersRepository.findOne({ where: { id: data.userId } });
+    
+    if (!userExists) {
+        console.log(`⚠️ Usuario ${data.userId} no encontrado. Creándolo automáticamente...`);
+        await this.usersRepository.save({
+            id: data.userId,
+            email: 'alumno_prueba@sav.com',
+            fullName: 'Alumno Generado Automáticamente',
+            role: 'STUDENT',
+            password: 'password123' // <--- ¡AQUÍ ESTABA EL ERROR! AGREGAMOS PASSWORD
+        });
+        console.log('✅ Usuario creado con éxito.');
+    }
+    // =========================================================================
+
     try {
-      const decoded = this.jwtService.verify(data.qrContent);
+      // A. Verificar Token
+      let decoded: any;
+      try {
+        decoded = this.jwtService.verify(data.qrContent);
+      } catch (e) {
+        throw new BadRequestException('El código QR ha expirado o es inválido.');
+      }
+
       const sessionId = decoded.sessionId;
 
+      // B. Buscar sesión
+      const session = await this.sessionRepository.findOne({ where: { id: sessionId } });
+      if (!session) throw new NotFoundException('La sesión de clase no existe o ya cerró.');
+
+      // C. Verificar duplicados
       const existing = await this.attendanceRepository.findOne({
-        where: { sessionId: sessionId, studentId: data.userId }
+        where: { 
+          session: { id: sessionId }, 
+          student: { id: data.userId } 
+        }
       });
 
       if (existing) {
-        throw new Error('Ya registraste asistencia en esta clase.');
+        return { status: 'ALREADY_REGISTERED', message: 'Ya registraste asistencia en esta clase.' };
       }
 
+      // D. Guardar Registro
       const newRecord = this.attendanceRepository.create({
-        studentId: data.userId, 
-        sessionId: sessionId,
-        status: 'PRESENT'
+        student: { id: data.userId } as User,
+        session: { id: sessionId } as Session,
+        status: 'PRESENT',
+        timestamp: new Date()
       });
 
       await this.attendanceRepository.save(newRecord);
+
+      // E. Emitir a Microservicio
+      this.analyticsClient.emit('attendance_registered', {
+        studentId: data.userId,
+        sessionId: sessionId,
+        timestamp: new Date(),
+        status: 'PRESENT'
+      });
+      
+      console.log(`📡 Evento enviado a Analytics para alumno: ${data.userId}`);
 
       return {
         status: 'SUCCESS',
@@ -94,18 +137,20 @@ export class IdentityService {
       };
 
     } catch (error) {
-      console.error('❌ ERROR:', error.message);
-      return { status: 'ERROR', message: error.message };
+      console.error('❌ ERROR REGISTRO:', error.message);
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException(error.message);
     }
   }
 
-  // --- 3. NUEVO MÉTODO: OBTENER LISTA DE ASISTENTES ---
-  // Esto lo llamará el Frontend cada 2 segundos para actualizar la lista
+  // --- 3. OBTENER LISTA ---
   async getSessionAttendees(sessionId: string): Promise<AttendanceRecord[]> {
     return this.attendanceRepository.find({
-      where: { sessionId: sessionId },
-      relations: ['student'], // <--- IMPORTANTE: Trae el nombre del alumno (User)
-      order: { checkInTime: 'DESC' } // Los últimos en llegar primero
+      where: { session: { id: sessionId } },
+      relations: ['student'],
+      order: { timestamp: 'DESC' }
     });
   }
 }
