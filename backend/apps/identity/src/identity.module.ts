@@ -49,23 +49,27 @@ import { AcademicModule } from './academic/academic.module';
     // 4. SUBMÓDULOS
     AcademicModule,
 
-    // 5. MICROSERVICIOS 📡
-    // Aquí registramos los clientes TCP para poder hablar con ellos
+    // 5. MICROSERVICIOS 📡 - Registro de Clientes TCP
     ClientsModule.register([
       {
         name: 'ANALYTICS_SERVICE',
         transport: Transport.TCP,
-        options: { host: 'localhost', port: 3001 },
+        options: { host: '127.0.0.1', port: 3001 },
       },
       {
-        name: 'NOTIFICATIONS_SERVICE', // <--- ✅ Nuevo servicio agregado correctamente
+        name: 'NOTIFICATIONS_SERVICE',
         transport: Transport.TCP,
-        options: { host: 'localhost', port: 3002 },
+        options: { host: '127.0.0.1', port: 3002 },
       },
       {
         name: 'REPORTS_SERVICE',
         transport: Transport.TCP,
         options: { host: '127.0.0.1', port: 3003 },
+      },
+      {
+        name: 'AUDIT_SERVICE',
+        transport: Transport.TCP,
+        options: { host: '127.0.0.1', port: 3004 },
       },
     ]),
   ],
