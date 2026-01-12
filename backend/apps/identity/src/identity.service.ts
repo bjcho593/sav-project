@@ -25,7 +25,9 @@ export class IdentityService {
 
     private jwtService: JwtService,
 
+    // Inyección de los clientes de Microservicios
     @Inject('ANALYTICS_SERVICE') private analyticsClient: ClientProxy,
+    @Inject('NOTIFICATIONS_SERVICE') private notificationsClient: ClientProxy,
   ) {}
 
   // --- 1. GENERAR QR ---
@@ -64,23 +66,21 @@ export class IdentityService {
   // --- 2. REGISTRAR ASISTENCIA ---
   async registerAttendance(data: { userId: string, qrContent: string }): Promise<any> {
     
-    // =========================================================================
-    // 🛠️ AUTO-GENERACIÓN DE USUARIO (CORREGIDO)
-    // =========================================================================
+    // 🛠️ AUTO-GENERACIÓN DE USUARIO (Si no existe)
+    // Usamos el ID en el email para evitar errores de duplicados
     const userExists = await this.usersRepository.findOne({ where: { id: data.userId } });
     
     if (!userExists) {
         console.log(`⚠️ Usuario ${data.userId} no encontrado. Creándolo automáticamente...`);
         await this.usersRepository.save({
             id: data.userId,
-            email: 'alumno_prueba@sav.com',
+            email: `alumno_${data.userId}@sav.com`, // <--- Email único dinámico
             fullName: 'Alumno Generado Automáticamente',
             role: 'STUDENT',
-            password: 'password123' // <--- ¡AQUÍ ESTABA EL ERROR! AGREGAMOS PASSWORD
+            password: 'password123'
         });
         console.log('✅ Usuario creado con éxito.');
     }
-    // =========================================================================
 
     try {
       // A. Verificar Token
@@ -109,7 +109,7 @@ export class IdentityService {
         return { status: 'ALREADY_REGISTERED', message: 'Ya registraste asistencia en esta clase.' };
       }
 
-      // D. Guardar Registro
+      // D. Guardar Registro en Base de Datos
       const newRecord = this.attendanceRepository.create({
         student: { id: data.userId } as User,
         session: { id: sessionId } as Session,
@@ -119,15 +119,28 @@ export class IdentityService {
 
       await this.attendanceRepository.save(newRecord);
 
-      // E. Emitir a Microservicio
-      this.analyticsClient.emit('attendance_registered', {
+      // =========================================================
+      // E. COMUNICACIÓN CON MICROSERVICIOS 📡
+      // =========================================================
+      
+      const eventData = {
         studentId: data.userId,
         sessionId: sessionId,
         timestamp: new Date(),
         status: 'PRESENT'
+      };
+
+      console.log('--- DEBUG: INTENTANDO ENVIAR A NOTIFICATIONS ---');
+
+      // Usamos .subscribe() para forzar el envío del mensaje
+      this.analyticsClient.emit('attendance_registered', eventData).subscribe();
+
+      this.notificationsClient.emit('attendance_registered', eventData).subscribe({
+        next: () => console.log('✅ Enviado a Notifications'),
+        error: (err) => console.error('❌ Error enviando a Notifications', err),
       });
       
-      console.log(`📡 Evento enviado a Analytics para alumno: ${data.userId}`);
+      console.log(`📡 Eventos emitidos a Analytics y Notifications para: ${data.userId}`);
 
       return {
         status: 'SUCCESS',

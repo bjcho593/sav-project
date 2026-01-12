@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
-import { ClientsModule, Transport } from '@nestjs/microservices'; // <--- IMPORTANTE
+import { ClientsModule, Transport } from '@nestjs/microservices'; 
 
 // Entidades
 import { Session } from './attendance/session.entity';
@@ -49,16 +49,18 @@ import { AcademicModule } from './academic/academic.module';
     // 4. SUBMÓDULOS
     AcademicModule,
 
-    // 5. MICROSERVICIOS (Aquí estaba el problema)
-    // Esto hace que 'ANALYTICS_SERVICE' exista y se pueda inyectar
+    // 5. MICROSERVICIOS 📡
+    // Aquí registramos los clientes TCP para poder hablar con ellos
     ClientsModule.register([
       {
         name: 'ANALYTICS_SERVICE',
         transport: Transport.TCP,
-        options: {
-          host: 'localhost',
-          port: 3001,
-        },
+        options: { host: 'localhost', port: 3001 },
+      },
+      {
+        name: 'NOTIFICATIONS_SERVICE', // <--- ✅ Nuevo servicio agregado correctamente
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: 3002 },
       },
     ]),
   ],
