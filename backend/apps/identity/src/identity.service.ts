@@ -29,6 +29,7 @@ export class IdentityService {
     @Inject('ANALYTICS_SERVICE') private analyticsClient: ClientProxy,
     @Inject('NOTIFICATIONS_SERVICE') private notificationsClient: ClientProxy,
     @Inject('REPORTS_SERVICE') private reportsClient: ClientProxy,
+    @Inject('AUDIT_SERVICE') private auditClient: ClientProxy
   ) {}
 
   // --- 1. GENERAR QR ---
@@ -142,6 +143,8 @@ export class IdentityService {
       });
 
       this.reportsClient.emit('attendance_registered', eventData).subscribe();
+
+      this.auditClient.emit('attendance_registered', eventData).subscribe();
       
       console.log(`📡 Eventos emitidos a Analytics y Notifications para: ${data.userId}`);
 
