@@ -28,6 +28,7 @@ export class IdentityService {
     // Inyección de los clientes de Microservicios
     @Inject('ANALYTICS_SERVICE') private analyticsClient: ClientProxy,
     @Inject('NOTIFICATIONS_SERVICE') private notificationsClient: ClientProxy,
+    @Inject('REPORTS_SERVICE') private reportsClient: ClientProxy,
   ) {}
 
   // --- 1. GENERAR QR ---
@@ -139,6 +140,8 @@ export class IdentityService {
         next: () => console.log('✅ Enviado a Notifications'),
         error: (err) => console.error('❌ Error enviando a Notifications', err),
       });
+
+      this.reportsClient.emit('attendance_registered', eventData).subscribe();
       
       console.log(`📡 Eventos emitidos a Analytics y Notifications para: ${data.userId}`);
 
