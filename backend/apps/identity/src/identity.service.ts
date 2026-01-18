@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ClientProxy } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs'; // Necesario para convertir observables en promesas
 import * as QRCode from 'qrcode';
 
 // Entidades
@@ -29,7 +30,8 @@ export class IdentityService {
     @Inject('ANALYTICS_SERVICE') private analyticsClient: ClientProxy,
     @Inject('NOTIFICATIONS_SERVICE') private notificationsClient: ClientProxy,
     @Inject('REPORTS_SERVICE') private reportsClient: ClientProxy,
-    @Inject('AUDIT_SERVICE') private auditClient: ClientProxy
+    @Inject('AUDIT_SERVICE') private auditClient: ClientProxy,
+    @Inject('SESSION_SERVICE') private sessionClient: ClientProxy, // 👈 Nuevo Cliente
   ) {}
 
   // --- 1. GENERAR QR ---
@@ -69,14 +71,13 @@ export class IdentityService {
   async registerAttendance(data: { userId: string, qrContent: string }): Promise<any> {
     
     // 🛠️ AUTO-GENERACIÓN DE USUARIO (Si no existe)
-    // Usamos el ID en el email para evitar errores de duplicados
     const userExists = await this.usersRepository.findOne({ where: { id: data.userId } });
     
     if (!userExists) {
         console.log(`⚠️ Usuario ${data.userId} no encontrado. Creándolo automáticamente...`);
         await this.usersRepository.save({
             id: data.userId,
-            email: `alumno_${data.userId}@sav.com`, // <--- Email único dinámico
+            email: `alumno_${data.userId}@sav.com`, 
             fullName: 'Alumno Generado Automáticamente',
             role: 'STUDENT',
             password: 'password123'
@@ -85,7 +86,7 @@ export class IdentityService {
     }
 
     try {
-      // A. Verificar Token
+      // A. Verificar Token JWT
       let decoded: any;
       try {
         decoded = this.jwtService.verify(data.qrContent);
@@ -95,11 +96,28 @@ export class IdentityService {
 
       const sessionId = decoded.sessionId;
 
-      // B. Buscar sesión
+      // =========================================================
+      // B. VALIDACIÓN CON SESSION MANAGER (Microservicio) 🏫
+      // =========================================================
+      // Enviamos el sessionId y el tiempo de generación al Manager
+      const sessionValidation = await firstValueFrom(
+        this.sessionClient.send(
+          { cmd: 'validate_session_status' }, 
+          { sessionId, timestamp: decoded.generatedAt }
+        )
+      );
+
+      if (!sessionValidation.valid) {
+        throw new BadRequestException(`Acceso denegado: ${sessionValidation.reason}`);
+      }
+
+      console.log(`✅ Sesión validada por Session Manager en: ${sessionValidation.room}`);
+
+      // C. Buscar sesión en DB local
       const session = await this.sessionRepository.findOne({ where: { id: sessionId } });
       if (!session) throw new NotFoundException('La sesión de clase no existe o ya cerró.');
 
-      // C. Verificar duplicados
+      // D. Verificar duplicados
       const existing = await this.attendanceRepository.findOne({
         where: { 
           session: { id: sessionId }, 
@@ -111,7 +129,7 @@ export class IdentityService {
         return { status: 'ALREADY_REGISTERED', message: 'Ya registraste asistencia en esta clase.' };
       }
 
-      // D. Guardar Registro en Base de Datos
+      // E. Guardar Registro en Base de Datos
       const newRecord = this.attendanceRepository.create({
         student: { id: data.userId } as User,
         session: { id: sessionId } as Session,
@@ -122,7 +140,7 @@ export class IdentityService {
       await this.attendanceRepository.save(newRecord);
 
       // =========================================================
-      // E. COMUNICACIÓN CON MICROSERVICIOS 📡
+      // F. COMUNICACIÓN CON MICROSERVICIOS DE EVENTOS 📡
       // =========================================================
       
       const eventData = {
@@ -132,27 +150,18 @@ export class IdentityService {
         status: 'PRESENT'
       };
 
-      console.log('--- DEBUG: INTENTANDO ENVIAR A NOTIFICATIONS ---');
-
-      // Usamos .subscribe() para forzar el envío del mensaje
+      // Emitir eventos asíncronos (Fire and forget)
       this.analyticsClient.emit('attendance_registered', eventData).subscribe();
-
-      this.notificationsClient.emit('attendance_registered', eventData).subscribe({
-        next: () => console.log('✅ Enviado a Notifications'),
-        error: (err) => console.error('❌ Error enviando a Notifications', err),
-      });
-
+      this.notificationsClient.emit('attendance_registered', eventData).subscribe();
       this.reportsClient.emit('attendance_registered', eventData).subscribe();
-
       this.auditClient.emit('attendance_registered', eventData).subscribe();
       
-      console.log(`📡 Eventos emitidos a Analytics y Notifications para: ${data.userId}`);
-
       return {
         status: 'SUCCESS',
         message: 'Asistencia registrada correctamente',
         student: data.userId,
-        session: sessionId
+        session: sessionId,
+        details: sessionValidation // Incluye info del aula retornada por el microservicio
       };
 
     } catch (error) {
