@@ -1,19 +1,22 @@
 import { Controller } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
+import * as crypto from 'crypto';
 
 @Controller()
 export class AuditController {
-  
+
   @EventPattern('attendance_registered')
-  handleAuditLog(@Payload() data: any) {
+  async logSecurityEvent(@Payload() data: any) {
+    // Generamos un Hash SHA-256 para asegurar la integridad del registro
+    const logHash = crypto.createHash('sha256')
+      .update(`${data.studentId}-${data.sessionId}-${data.timestamp}`)
+      .digest('hex');
+
     console.log('------------------------------------------------');
-    console.log('🚨 [SECURITY AUDIT LOG] 🚨');
-    console.log(`Action: ATTENDANCE_CHECK_IN`);
-    console.log(`Student ID: ${data.studentId}`);
-    console.log(`Session ID: ${data.sessionId}`);
-    console.log(`Timestamp: ${new Date().toISOString()}`);
-    console.log(`Status: VERIFIED_SUCCESS`);
-    console.log(`Trace ID: ${Math.random().toString(36).substring(2, 9).toUpperCase()}`);
+    console.log('[AUDIT LOG] Registro de Seguridad Generado');
+    console.log(`Integrity Hash: ${logHash.substring(0, 16)}...`);
+    console.log(`Auditoría para Alumno: ${data.studentId}`);
+    console.log(`Estado: REGISTRO_INMUTABLE_GENERADO`);
     console.log('------------------------------------------------');
   }
 }

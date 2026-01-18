@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # 1. Base de Datos Centralizada
+  postgres:
+    image: postgres:15-alpine
+    container_name: sav-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: sav_db
+    ports:
+      - "5435:5432"
+    networks:
+      - sav-network
+
+  # 2. Microservicio Identity (Gateway & Auth)
+  identity:
+    build:
+      context: .
+      dockerfile: apps/identity/Dockerfile
+    container_name: sav-identity
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+    depends_on:
+      - postgres
+    networks:
+      - sav-network
+
+  # 3. Microservicio Analytics
+  analytics:
+    build:
+      context: .
+      dockerfile: apps/analytics/Dockerfile
+    container_name: sav-analytics
+    ports:
+      - "3001:3001"
+    networks:
+      - sav-network
+
+  # 4. Microservicio Notifications
+  notifications:
+    build:
+      context: .
+      dockerfile: apps/notifications/Dockerfile
+    container_name: sav-notifications
+    ports:
+      - "3002:3002"
+    networks:
+      - sav-network
+
+  # 5. Microservicio Reports
+  reports:
+    build:
+      context: .
+      dockerfile: apps/reports/Dockerfile
+    container_name: sav-reports
+    ports:
+      - "3003:3003"
+    networks:
+      - sav-network
+
+  # 6. Microservicio Audit
+  audit:
+    build:
+      context: .
+      dockerfile: apps/audit/Dockerfile
+    container_name: sav-audit
+    ports:
+      - "3004:3004"
+    networks:
+      - sav-network
+
+# Red virtual interna para que los servicios se vean entre sí
+networks:
+  sav-network:
+    driver: bridge

@@ -8,7 +8,7 @@ export const StudentView = () => {
   const [status, setStatus] = useState<'IDLE' | 'SUCCESS' | 'ERROR'>('IDLE');
 
   // ID de alumno SIMULADO (Este es el que se usa para la tesis por ahora)
-  const studentId = '123e4567-e89b-12d3-a456-426614174999';
+  const studentId = '123e4567-e89b-12d3-a456-426614174333';
 
   useEffect(() => {
     // 1. Configuración del escáner

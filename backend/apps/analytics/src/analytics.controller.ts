@@ -1,20 +1,20 @@
 import { Controller } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
-import { AnalyticsService } from './analytics.service';
 
 @Controller()
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  // Simulación de base de datos en memoria para la demo
+  private attendanceStats = { total: 0, students: new Set() };
 
-  // BORRAMOS EL MÉTODO 'getHello' QUE DABA ERROR
-  
-  // PONEMOS EL NUEVO MÉTODO QUE ESCUCHA EVENTOS
   @EventPattern('attendance_registered')
-  handleAttendance(@Payload() data: any) {
+  handleAnalytics(@Payload() data: any) {
+    this.attendanceStats.total++;
+    this.attendanceStats.students.add(data.studentId);
+
     console.log('------------------------------------------------');
-    console.log('📊 [ANALYTICS] Evento recibido desde Identity Service');
-    
-    // Llamamos a la función que SÍ existe en el servicio
-    this.analyticsService.processAttendanceStats(data);
+    console.log('[ANALYTICS] Procesando métricas...');
+    console.log(`Asistencias Totales hoy: ${this.attendanceStats.total}`);
+    console.log(`Estudiantes Únicos detectados: ${this.attendanceStats.students.size}`);
+    console.log('------------------------------------------------');
   }
 }
