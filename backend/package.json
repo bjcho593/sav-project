@@ -1,8 +1,8 @@
 {
   "name": "backend",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Smart Attendance Verification - Microservices Mesh",
+  "author": "Steven",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -17,7 +17,10 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./apps/backend/test/jest-e2e.json"
+    "test:e2e": "jest --config ./apps/backend/test/jest-e2e.json",
+    "start:all": "docker-compose up --build",
+    "stop:all": "docker-compose down",
+    "logs": "docker-compose logs -f"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
