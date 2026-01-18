@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # 1. Base de Datos Centralizada
+  # INFRAESTRUCTURA BASE
   postgres:
     image: postgres:15-alpine
     container_name: sav-postgres
@@ -14,7 +14,7 @@ services:
     networks:
       - sav-network
 
-  # 2. Microservicio Identity (Gateway & Auth)
+  # SERVICIO PRINCIPAL (GATEWAY)
   identity:
     build:
       context: .
@@ -22,59 +22,55 @@ services:
     container_name: sav-identity
     ports:
       - "3000:3000"
-    environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
     depends_on:
       - postgres
     networks:
       - sav-network
 
-  # 3. Microservicio Analytics
+  # SERVICIOS DE VALIDACIÓN (Síncronos vía TCP)
+  session-manager:
+    build: { context: ., dockerfile: apps/session-manager/Dockerfile }
+    container_name: sav-session
+    ports: ["3005:3005"]
+    networks: [sav-network]
+
+  enrollment:
+    build: { context: ., dockerfile: apps/enrollment/Dockerfile }
+    container_name: sav-enrollment
+    ports: ["3006:3006"]
+    networks: [sav-network]
+
+  scheduling:
+    build: { context: ., dockerfile: apps/scheduling/Dockerfile }
+    container_name: sav-scheduling
+    ports: ["3007:3007"]
+    networks: [sav-network]
+
+  # SERVICIOS DE EVENTOS (Asíncronos vía TCP)
   analytics:
-    build:
-      context: .
-      dockerfile: apps/analytics/Dockerfile
+    build: { context: ., dockerfile: apps/analytics/Dockerfile }
     container_name: sav-analytics
-    ports:
-      - "3001:3001"
-    networks:
-      - sav-network
+    ports: ["3001:3001"]
+    networks: [sav-network]
 
-  # 4. Microservicio Notifications
   notifications:
-    build:
-      context: .
-      dockerfile: apps/notifications/Dockerfile
+    build: { context: ., dockerfile: apps/notifications/Dockerfile }
     container_name: sav-notifications
-    ports:
-      - "3002:3002"
-    networks:
-      - sav-network
+    ports: ["3002:3002"]
+    networks: [sav-network]
 
-  # 5. Microservicio Reports
   reports:
-    build:
-      context: .
-      dockerfile: apps/reports/Dockerfile
+    build: { context: ., dockerfile: apps/reports/Dockerfile }
     container_name: sav-reports
-    ports:
-      - "3003:3003"
-    networks:
-      - sav-network
+    ports: ["3003:3003"]
+    networks: [sav-network]
 
-  # 6. Microservicio Audit
   audit:
-    build:
-      context: .
-      dockerfile: apps/audit/Dockerfile
+    build: { context: ., dockerfile: apps/audit/Dockerfile }
     container_name: sav-audit
-    ports:
-      - "3004:3004"
-    networks:
-      - sav-network
+    ports: ["3004:3004"]
+    networks: [sav-network]
 
-# Red virtual interna para que los servicios se vean entre sí
 networks:
   sav-network:
     driver: bridge
