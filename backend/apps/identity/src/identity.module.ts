@@ -76,6 +76,11 @@ import { AcademicModule } from './academic/academic.module';
         transport: Transport.TCP,
         options: { host: '127.0.0.1', port: 3005 },
       },
+      {
+        name: 'ENROLLMENT_SERVICE',
+        transport: Transport.TCP,
+        options: { host: '127.0.0.1', port: 3006 },
+      },
     ]),
   ],
   controllers: [IdentityController],
