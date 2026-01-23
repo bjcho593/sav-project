@@ -34,7 +34,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
-            # 1. Crear directorio si no existe y entrar
+            # 1. Crear directorio si no existe y entra
             mkdir -p ~/sav-project
             cd ~/sav-project
             
