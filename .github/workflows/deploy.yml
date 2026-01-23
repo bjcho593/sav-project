@@ -17,11 +17,16 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Identity
+      - name: Build and Push Microservices
         run: |
-          # Construimos usando el contexto de la raíz para que Docker vea todo el proyecto
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/sav-identity:latest -f ./backend/apps/identity/Dockerfile .
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/sav-identity:latest
+          # Lista de todos tus microservicios
+          SERVICES=("identity" "session-manager" "enrollment" "scheduling" "academic" "profiles" "analytics" "notifications" "reports" "audit")
+          
+          for SERVICE in "${SERVICES[@]}"; do
+            echo "Building and pushing $SERVICE..."
+            docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/sav-$SERVICE:latest -f ./backend/apps/$SERVICE/Dockerfile .
+            docker push ${{ secrets.DOCKERHUB_USERNAME }}/sav-$SERVICE:latest
+          done
 
   deploy-to-aws:
     needs: build-and-push
@@ -34,17 +39,15 @@ jobs:
           username: ubuntu
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
-            # 1. Crear directorio si no existe y entra
             mkdir -p ~/sav-project
             cd ~/sav-project
             
-            # 2. Descargar el docker-compose.yml directamente desde tu GitHub (rama qa)
+            # Descargar el docker-compose.yml actualizado desde la rama qa
             curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                  -L https://raw.githubusercontent.com/bjcho593/sav-project/qa/backend/docker-compose.yml \
                  -o docker-compose.yml
             
-            # 3. Inyectar variables de entorno y levantar
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            # Limpiar contenedores viejos y levantar los nuevos desde Docker Hub
             docker-compose pull
             docker-compose up -d
-            docker system prune -f # Mantenimiento de espacio en disco
+            docker system prune -f
