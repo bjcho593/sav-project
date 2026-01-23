@@ -27,9 +27,8 @@ COPY --from=builder /app/package*.json ./
 RUN npm install --omit=dev
 
 # Copiamos los archivos compilados del microservicio
-COPY --from=builder /app/dist/apps/identity ./dist/apps/identity
-# Importante: Copiamos las librerías compartidas si las usas
-COPY --from=builder /app/dist/libs ./dist/libs 
+# COPY --from=builder /app/dist/apps/identity ./dist/apps/identity
+# COPY --from=builder /app/dist/libs ./dist/libs 
 
 EXPOSE 3000
 
