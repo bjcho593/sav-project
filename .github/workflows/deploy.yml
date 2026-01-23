@@ -2,7 +2,8 @@ name: Deploy SAV to AWS
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, qa ]
+  workflow_dispatch: # Esto te permite ejecutarlo manualmente ahora mismo
 
 jobs:
   build-and-push:
@@ -18,6 +19,7 @@ jobs:
 
       - name: Build and Push Identity
         run: |
+          # Importante: El contexto del build (.) debe permitir ver el package.json de la raíz
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/sav-identity:latest -f ./backend/apps/identity/Dockerfile .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/sav-identity:latest
 
@@ -32,6 +34,18 @@ jobs:
           username: ubuntu
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
+            # 1. Aseguramos que la carpeta exista
+            mkdir -p ~/sav-project
             cd ~/sav-project
+            
+            # 2. Descargamos solo el docker-compose de la rama actual para evitar clonar todo
+            curl -O https://raw.githubusercontent.com/bjcho593/sav-project/qa/backend/docker-compose.yml
+            
+            # 3. Autenticamos al Docker de AWS para que pueda bajar tus imágenes privadas
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+            
+            # 4. Desplegamos
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             docker-compose pull
             docker-compose up -d
+            docker system prune -f # Limpieza para no llenar el disco de la EC2
