@@ -15,72 +15,70 @@
       "root": "apps/identity",
       "entryFile": "main",
       "sourceRoot": "apps/identity/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/identity/tsconfig.app.json"
-      }
+      "compilerOptions": { "tsConfigPath": "apps/identity/tsconfig.app.json" }
     },
     "analytics": {
       "type": "application",
       "root": "apps/analytics",
       "entryFile": "main",
       "sourceRoot": "apps/analytics/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/analytics/tsconfig.app.json"
-      }
+      "compilerOptions": { "tsConfigPath": "apps/analytics/tsconfig.app.json" }
     },
     "notifications": {
       "type": "application",
       "root": "apps/notifications",
       "entryFile": "main",
       "sourceRoot": "apps/notifications/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/notifications/tsconfig.app.json"
-      }
+      "compilerOptions": { "tsConfigPath": "apps/notifications/tsconfig.app.json" }
     },
     "reports": {
       "type": "application",
       "root": "apps/reports",
       "entryFile": "main",
       "sourceRoot": "apps/reports/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/reports/tsconfig.app.json"
-      }
+      "compilerOptions": { "tsConfigPath": "apps/reports/tsconfig.app.json" }
     },
     "audit": {
       "type": "application",
       "root": "apps/audit",
       "entryFile": "main",
       "sourceRoot": "apps/audit/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/audit/tsconfig.app.json"
-      }
+      "compilerOptions": { "tsConfigPath": "apps/audit/tsconfig.app.json" }
     },
     "session-manager": {
       "type": "application",
       "root": "apps/session-manager",
       "entryFile": "main",
       "sourceRoot": "apps/session-manager/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/session-manager/tsconfig.app.json"
-      }
+      "compilerOptions": { "tsConfigPath": "apps/session-manager/tsconfig.app.json" }
     },
     "enrollment": {
       "type": "application",
       "root": "apps/enrollment",
       "entryFile": "main",
       "sourceRoot": "apps/enrollment/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/enrollment/tsconfig.app.json"
-      }
+      "compilerOptions": { "tsConfigPath": "apps/enrollment/tsconfig.app.json" }
     },
     "scheduling": {
       "type": "application",
       "root": "apps/scheduling",
       "entryFile": "main",
       "sourceRoot": "apps/scheduling/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/scheduling/tsconfig.app.json"
-      }
+      "compilerOptions": { "tsConfigPath": "apps/scheduling/tsconfig.app.json" }
+    },
+    "academic": {
+      "type": "application",
+      "root": "apps/academic",
+      "entryFile": "main",
+      "sourceRoot": "apps/academic/src",
+      "compilerOptions": { "tsConfigPath": "apps/academic/tsconfig.app.json" }
+    },
+    "profiles": {
+      "type": "application",
+      "root": "apps/profiles",
+      "entryFile": "main",
+      "sourceRoot": "apps/profiles/src",
+      "compilerOptions": { "tsConfigPath": "apps/profiles/tsconfig.app.json" }
     }
   }
 }

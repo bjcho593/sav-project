@@ -16,3 +16,15 @@ Thumbs.db
 # IDEs
 .vscode/
 .idea/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+*.tfvars
+
+# Node / NestJS
+node_modules/
+dist/
+npm-debug.log

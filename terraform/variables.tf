@@ -1,26 +1,18 @@
+variable "aws_access_key" { type = string }
+variable "aws_secret_key" { type = string }
+variable "aws_session_token" { type = string }
+
 variable "environment" {
-  description = "El ambiente a desplegar: qa o prod"
-  type        = string
-}
-
-variable "cloudflare_api_token" {
-  description = "Token de API de Cloudflare"
-  type        = string
-  sensitive   = true
-}
-
-variable "cloudflare_zone_id" {
-  description = "ID de la zona de tu dominio en Cloudflare"
-  type        = string
+  type    = string
+  default = "dev"
 }
 
 variable "db_password" {
-  description = "Contraseña maestra de la base de datos"
-  type        = string
-  sensitive   = true
+  type      = string
+  sensitive = true
 }
 
 variable "domain_name" {
-  description = "Tu dominio base (ej: mitesis.com)"
-  type        = string
+  type    = string
+  default = "sav-project.local"
 }

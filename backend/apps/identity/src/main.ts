@@ -9,9 +9,9 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   // --- 1. CONFIGURACIÓN DE CORS ---
-  // Vital para que tu Frontend en el puerto 5173 pueda comunicarse con el puerto 3000
+  // Vital para que tu Frontend (Vite) pueda comunicarse con el Backend
   app.enableCors({
-    origin: '*', // En producción, cámbialo a la URL de tu frontend
+    origin: '*', 
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
@@ -29,16 +29,18 @@ async function bootstrap() {
     `)
     .setVersion('1.0')
     .addTag('Attendance')
-    .addBearerAuth() // Habilita el botón "Authorize" para probar con tokens JWT
+    .addBearerAuth()
     .build();
   
   const document = SwaggerModule.createDocument(app, config);
-  // La ruta para ver la documentación será: http://localhost:3000/api/docs
   SwaggerModule.setup('api/docs', app, document);
 
   // --- 3. INICIO DEL SERVIDOR ---
-  const PORT = 3000;
-  await app.listen(PORT);
+  // Usamos process.env.PORT para mayor flexibilidad en Docker
+  const PORT = process.env.PORT || 3000;
+
+  // CAMBIO CRÍTICO: Escuchar en '0.0.0.0' para permitir conexiones externas al contenedor
+  await app.listen(PORT, '0.0.0.0');
   
   logger.log(`==========================================================`);
   logger.log(`🚀 IDENTITY GATEWAY RUNNING ON: http://localhost:${PORT}`);

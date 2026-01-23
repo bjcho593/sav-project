@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  # INFRAESTRUCTURA BASE
+  # INFRAESTRUCTURA
   postgres:
     image: postgres:15-alpine
     container_name: sav-postgres
@@ -14,20 +12,15 @@ services:
     networks:
       - sav-network
 
-  # SERVICIO PRINCIPAL (GATEWAY)
+  # GATEWAY (Indispensable)
   identity:
-    build:
-      context: .
-      dockerfile: apps/identity/Dockerfile
+    build: { context: ., dockerfile: apps/identity/Dockerfile }
     container_name: sav-identity
-    ports:
-      - "3000:3000"
-    depends_on:
-      - postgres
-    networks:
-      - sav-network
+    ports: ["3000:3000"]
+    depends_on: [postgres]
+    networks: [sav-network]
 
-  # SERVICIOS DE VALIDACIÓN (Síncronos vía TCP)
+  # NÚCLEO ACADÉMICO (Indispensables para el flujo del QR)
   session-manager:
     build: { context: ., dockerfile: apps/session-manager/Dockerfile }
     container_name: sav-session
@@ -46,30 +39,44 @@ services:
     ports: ["3007:3007"]
     networks: [sav-network]
 
-  # SERVICIOS DE EVENTOS (Asíncronos vía TCP)
-  analytics:
-    build: { context: ., dockerfile: apps/analytics/Dockerfile }
-    container_name: sav-analytics
-    ports: ["3001:3001"]
+  academic:
+    build: { context: ., dockerfile: apps/academic/Dockerfile }
+    container_name: sav-academic
+    ports: ["3008:3008"]
     networks: [sav-network]
 
-  notifications:
-    build: { context: ., dockerfile: apps/notifications/Dockerfile }
-    container_name: sav-notifications
-    ports: ["3002:3002"]
-    networks: [sav-network]
+  # --- SERVICIOS COMENTADOS PARA MAYOR RAPIDEZ ---
+  # Desactivamos estos porque no afectan el registro de asistencia básico
 
-  reports:
-    build: { context: ., dockerfile: apps/reports/Dockerfile }
-    container_name: sav-reports
-    ports: ["3003:3003"]
-    networks: [sav-network]
+  # profiles:
+  #   build: { context: ., dockerfile: apps/profiles/Dockerfile }
+  #   container_name: sav-profiles
+  #   ports: ["3011:3011"]
+  #   networks: [sav-network]
 
-  audit:
-    build: { context: ., dockerfile: apps/audit/Dockerfile }
-    container_name: sav-audit
-    ports: ["3004:3004"]
-    networks: [sav-network]
+  # analytics:
+  #   build: { context: ., dockerfile: apps/analytics/Dockerfile }
+  #   container_name: sav-analytics
+  #   ports: ["3001:3001"]
+  #   networks: [sav-network]
+
+  # notifications:
+  #   build: { context: ., dockerfile: apps/notifications/Dockerfile }
+  #   container_name: sav-notifications
+  #   ports: ["3002:3002"]
+  #   networks: [sav-network]
+
+  # reports:
+  #   build: { context: ., dockerfile: apps/reports/Dockerfile }
+  #   container_name: sav-reports
+  #   ports: ["3003:3003"]
+  #   networks: [sav-network]
+
+  # audit:
+  #   build: { context: ., dockerfile: apps/audit/Dockerfile }
+  #   container_name: sav-audit
+  #   ports: ["3004:3004"]
+  #   networks: [sav-network]
 
 networks:
   sav-network:

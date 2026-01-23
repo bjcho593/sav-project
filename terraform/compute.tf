@@ -3,7 +3,7 @@ resource "aws_instance" "bastion" {
   ami           = "ami-053b0d53c279acc90" # Ubuntu 22.04
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.public.id
-  key_name      = "sav-deploy-key" # Asegúrate de haber subido la key
+  key_name      = "vockey" # Asegúrate de haber subido la key
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
 
   tags = { Name = "SAV-Bastion-${var.environment}" }

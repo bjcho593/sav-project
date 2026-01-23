@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity({ name: 'courses', schema: 'academic' })
+// Eliminamos el schema 'academic' para evitar el error de base de datos
+@Entity({ name: 'courses' }) 
 export class Course {
   @PrimaryGeneratedColumn()
   id: number;
