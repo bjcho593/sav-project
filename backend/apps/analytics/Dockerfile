@@ -28,5 +28,5 @@ COPY --from=builder /app/dist/apps/analytics ./dist/apps/analytics
 
 EXPOSE 3001
 
-# 5. Comando de inicio con la ruta real al main.js del microservici
+# 5. Comando de inicio con la ruta real al main.js del microservic
 CMD ["node", "dist/apps/analytics/main"]
