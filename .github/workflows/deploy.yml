@@ -1,0 +1,53 @@
+name: Deploy SAV to AWS
+
+on:
+  push:
+    branches: [ main, qa ]
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Login a Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Microservices
+        run: |
+          # Lista de todos tus microservicios
+          SERVICES=("identity" "session-manager" "enrollment" "scheduling" "academic" "profiles" "analytics" "notifications" "reports" "audit")
+          
+          for SERVICE in "${SERVICES[@]}"; do
+            echo "Building and pushing $SERVICE..."
+            docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/sav-$SERVICE:latest -f ./backend/apps/$SERVICE/Dockerfile .
+            docker push ${{ secrets.DOCKERHUB_USERNAME }}/sav-$SERVICE:latest
+          done
+
+  deploy-to-aws:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Desplegar en EC2 vía SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_EC2_IP }}
+          username: ubuntu
+          key: ${{ secrets.AWS_SSH_KEY }}
+          script: |
+            mkdir -p ~/sav-project
+            cd ~/sav-project
+            
+            # Descargar el docker-compose.yml actualizado desde la rama qa
+            curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                 -L https://raw.githubusercontent.com/bjcho593/sav-project/qa/backend/docker-compose.yml \
+                 -o docker-compose.yml
+            
+            # Limpiar contenedores viejos y levantar los nuevos desde Docker Hub
+            docker-compose pull
+            docker-compose up -d
+            docker system prune -f

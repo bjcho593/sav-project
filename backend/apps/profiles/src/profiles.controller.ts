@@ -1,12 +1,14 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { ProfilesService } from './profiles.service';
 
 @Controller()
 export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) {}
 
-  @Get()
-  getHello(): string {
-    return this.profilesService.getHello();
+  @MessagePattern({ cmd: 'get_user_profile' })
+  getUserProfile(@Payload() data: { userId: string }) {
+    console.log(`👤 [PROFILES] Fetching profile for: ${data.userId}`);
+    return this.profilesService.getProfile(data.userId);
   }
 }

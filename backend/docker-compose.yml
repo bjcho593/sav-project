@@ -1,0 +1,81 @@
+services:
+  # INFRAESTRUCTURA
+  postgres:
+    image: postgres:15-alpine
+    container_name: sav-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: sav_db
+    ports:
+      - "5435:5432"
+    networks:
+      - sav-network
+
+  # GATEWAY & AUTH
+  identity:
+    image: sssaragosin/sav-identity:latest
+    container_name: sav-identity
+    ports: ["3000:3000"]
+    depends_on: [postgres]
+    networks: [sav-network]
+
+  # NÚCLEO ACADÉMICO (Registro y QR)
+  session-manager:
+    image: sssaragosin/sav-session-manager:latest
+    container_name: sav-session
+    ports: ["3005:3005"]
+    networks: [sav-network]
+
+  enrollment:
+    image: sssaragosin/sav-enrollment:latest
+    container_name: sav-enrollment
+    ports: ["3006:3006"]
+    networks: [sav-network]
+
+  scheduling:
+    image: sssaragosin/sav-scheduling:latest
+    container_name: sav-scheduling
+    ports: ["3007:3007"]
+    networks: [sav-network]
+
+  academic:
+    image: sssaragosin/sav-academic:latest
+    container_name: sav-academic
+    ports: ["3008:3008"]
+    networks: [sav-network]
+
+  # SERVICIOS COMPLEMENTARIOS (Activados)
+  profiles:
+    image: sssaragosin/sav-profiles:latest
+    container_name: sav-profiles
+    ports: ["3011:3011"]
+    networks: [sav-network]
+
+  analytics:
+    image: sssaragosin/sav-analytics:latest
+    container_name: sav-analytics
+    ports: ["3001:3001"]
+    networks: [sav-network]
+
+  notifications:
+    image: sssaragosin/sav-notifications:latest
+    container_name: sav-notifications
+    ports: ["3002:3002"]
+    networks: [sav-network]
+
+  reports:
+    image: sssaragosin/sav-reports:latest
+    container_name: sav-reports
+    ports: ["3003:3003"]
+    networks: [sav-network]
+
+  audit:
+    image: sssaragosin/sav-audit:latest
+    container_name: sav-audit
+    ports: ["3004:3004"]
+    networks: [sav-network]
+
+networks:
+  sav-network:
+    driver: bridge

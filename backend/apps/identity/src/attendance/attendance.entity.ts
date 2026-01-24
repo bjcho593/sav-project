@@ -1,25 +1,27 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from '../users/user.entity'
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from '../users/user.entity';
+import { Session } from './session.entity';
 
-@Entity({ name: 'records', schema: 'attendance' }) // Apunta al esquema 'attendance'
+@Entity('attendance_records')
 export class AttendanceRecord {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column({ name: 'session_id', type: 'uuid' })
-  sessionId: string; // ID de la clase del día
-
-  @Column({ name: 'student_id', type: 'uuid' })
-  studentId: string; // ID del alumno
-
-  @CreateDateColumn({ name: 'check_in_time' })
-  checkInTime: Date;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ default: 'PRESENT' })
-  status: string;
+  status: string; // 'PRESENT', 'LATE', 'ABSENT'
 
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'student_id' })
+  // AQUÍ ESTABA EL PROBLEMA: 
+  // Nos aseguramos de que se llame 'timestamp' para coincidir con el servicio
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  timestamp: Date; 
+
+  // Relación con el Estudiante
+  @ManyToOne(() => User, (user) => user.attendanceRecords)
+  @JoinColumn({ name: 'studentId' })
   student: User;
-  
+
+  // Relación con la Sesión de Clase
+  @ManyToOne(() => Session, (session) => session.attendanceRecords)
+  @JoinColumn({ name: 'sessionId' })
+  session: Session;
 }
