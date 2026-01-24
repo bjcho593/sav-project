@@ -13,4 +13,4 @@ Este es el servicio principal (Gateway) del Sistema de Asistencia Inteligente (S
 - NestJS (Monorepo)
 - TypeORM + PostgreSQL
 - JWT (JSON Web Tokens)
-- TCP Client Proxy
+- TCP Client Prox
